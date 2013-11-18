@@ -1,5 +1,5 @@
 # Laravel Config with DB-storage support
-This package expands the default laravel Config class, so fallback capability is built in
+This package extends default laravel Config, so fallback capability is built in
 
 ## Installation
 Require this package in your composer.json:
@@ -11,10 +11,12 @@ And add the ServiceProvider to the providers array in app/config/app.php
     'Terbium\DbConfig\DbConfigServiceProvider',
 
 Run migration to create settings table
-	'php artisan migrate --packadge="terbium/db-config"'
 
-Publish config using artisan CLI (if you wont to cascade default config).
-	'php artisan config:publish terbium/db-config'
+    'php artisan migrate --packadge="terbium/db-config"'
+
+Publish config using artisan CLI (if you want to cascade default config).
+
+    'php artisan config:publish terbium/db-config'
 
 You can register the facade in the `aliases` key of your `app/config/app.php` file.
 
@@ -42,17 +44,24 @@ Or replace default one
 ##Specific commands
 
 ###Store item into database table
-    Config::store($key, $value, $environment = 'production') // key should always be with group (`app.foo`, `app.bar` but not `foobar`)
+
+    Config::store($key, $value, $environment = 'production') 
+    // key should always be with group (`app.foo`, `app.bar` but not `foobar`)
+    // this also sets the key immediately
 
 ###Remove item from the database
-	Config::forget($key, $environment = 'production')
 
-###Clear all current items (they will be reloaded on next usage)
-	Config::clear()
+    Config::forget($key, $environment = 'production')
 
-###Clear the table with settings
-	Config::clearDb()
+###Clear all current items from memory (they will be reloaded on next call)
+
+    Config::clear()
+
+###Truncate the table with settings
+
+    Config::clearDb()
 
 ###Return query builder with list of settings from database
-	Config::listDb($wildcard = null, $environment = 'production')
+
+    Config::listDb($wildcard = null, $environment = 'production')
 
