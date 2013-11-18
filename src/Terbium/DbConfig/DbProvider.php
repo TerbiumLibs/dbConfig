@@ -43,7 +43,12 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
         $list = DB::table($this->table)->where('key', 'LIKE', $collection . '%');
 
         if ($environment != 'production') {
-            $list = $list->whereIn('environment',array('production', $environment))->orderBy(DB::Raw('FIELD (environment, \'production\', \''.$environment.'\')'));
+
+            //detect sorting order to get production environment first
+            $sort = (strcmp('production', $environment) > 0) ? 'DESC': 'ASC';
+
+            $list = $list->whereIn('environment',array('production', $environment))->orderBy('environment', $sort);
+
         } else {
             $list = $list->where('environment', 'production');
         }
