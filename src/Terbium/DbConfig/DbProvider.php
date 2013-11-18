@@ -31,7 +31,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      *
      * @return array
      */
-    public function load($collection, $environment = 'main')
+    public function load($collection, $environment = 'production')
     {
 
         $items = array();
@@ -40,10 +40,16 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
         // First we'll get the main configuration with empty environment. Once we have
         // that we can check for any environment specific settings, which will get
         // merged on top of the main arrays to make the environments cascade.
-        $list = DB::table($this->table)->where('environment', 'main')->where('key', 'LIKE', $collection . '%')->lists(
-            'value',
-            'key'
-        );
+        $list = DB::table($this->table)->where('key', 'LIKE', $collection . '%');
+
+        if ($environment != 'production') {
+            $list = $list->whereIn('environment',array('production', $environment))->orderBy(DB::Raw('FIELD (environment, \'production\', \''.$environment.'\')'));
+        } else {
+            $list = $list->where('environment', 'production');
+        }
+
+        $list = $list->lists('value', 'key');
+
 
         // convert dotted list back to multidimensional array
         foreach ($list as $key => $value) {
@@ -51,31 +57,6 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
             list(, , $key) = $this->parseKey($key);
             $value = json_decode($value);
             array_set($items, $key, $value);
-        }
-
-
-        // Finally we're ready to check for the environment specific configuration
-        // which will be merged on top of the main arrays so that they get
-        // precedence over them if we are currently in an environments setup.
-
-        if ($environment != 'main') {
-            $list = DB::table($this->table)->where('environment', $environment)->where(
-                'key',
-                'LIKE',
-                    $collection . '%'
-            )->lists('value', 'key');
-
-            $eitems = array();
-
-            foreach ($list as $key => $value) {
-                // remove namespace and group from key
-                list(, , $key) = $this->parseKey($key);
-                $value = json_decode($value);
-                array_set($eitems, $key, $value);
-            }
-
-            $items = array_replace_recursive($items, $eitems);
-            unset($eitems);
         }
 
         return $items;
@@ -92,7 +73,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      *
      * @throws Exceptions\SaveException
      */
-    public function store($key, $value, $environment = 'main')
+    public function store($key, $value, $environment = 'production')
     {
 
         if (!is_array($value)) {
@@ -119,7 +100,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      * @param string $environment
      * @throws Exceptions\SaveException
      */
-    private function _store($key, $value, $environment = 'main')
+    private function _store($key, $value, $environment = 'production')
     {
 
         $provider = $this;
@@ -177,7 +158,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      *
      * @throws Exceptions\SaveException
      */
-    public function forget($key, $environment = 'main')
+    public function forget($key, $environment = 'production')
     {
 
         try {
@@ -222,7 +203,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      *
      * @return Illuminate\Database\Query\Builder
      */
-    public function listDb($wildcard = null, $environment = 'main')
+    public function listDb($wildcard = null, $environment = 'production')
     {
 
         $query = DB::table($this->table);

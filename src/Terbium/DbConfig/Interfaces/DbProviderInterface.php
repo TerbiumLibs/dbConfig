@@ -18,7 +18,7 @@ interface DbProviderInterface {
 	 * @param mixed $value
 	 * @param string $environment
 	 */
-	public function store($key, $value, $environment = 'main');
+	public function store($key, $value, $environment = 'production');
 
 	/**
 	 * Remove item from the database
@@ -26,7 +26,7 @@ interface DbProviderInterface {
 	 * @param string $key
 	 * @param string $environment
 	 */
-	public function forget($key, $environment = 'main');
+	public function forget($key, $environment = 'production');
 
 	/**
 	 * Clear the table with settings

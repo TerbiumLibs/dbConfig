@@ -79,7 +79,7 @@ class DbConfig extends Repository
      *
      * @throws Exceptions\SaveException
      */
-    public function store($key, $value, $environment = 'main')
+    public function store($key, $value, $environment = 'production')
     {
 
         list($namespace, $group, $item) = $this->parseKey($key);
@@ -111,7 +111,7 @@ class DbConfig extends Repository
      *
      * @throws Exceptions\SaveException
      */
-    public function forget($key, $environment = 'main')
+    public function forget($key, $environment = 'production')
     {
 
         list($namespace, $group, $item) = $this->parseKey($key);
@@ -156,7 +156,7 @@ class DbConfig extends Repository
      * @return Illuminate\Database\Query\Builder
      */
 
-    public function listDb($wildcard = null, $environment = 'main')
+    public function listDb($wildcard = null, $environment = 'production')
     {
 
         return $this->dbProvider->listDb($wildcard, $environment);
