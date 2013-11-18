@@ -45,7 +45,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
         if ($environment != 'production') {
 
             //detect sorting order to get production environment first
-            $sort = (strcmp('production', $environment) > 0) ? 'DESC': 'ASC';
+            $sort = (strcasecmp('production', $environment) > 0) ? 'DESC': 'ASC';
 
             $list = $list->whereIn('environment',array('production', $environment))->orderBy('environment', $sort);
 
