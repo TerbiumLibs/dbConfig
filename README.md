@@ -42,10 +42,10 @@ Or replace default one
 ##Specific commands
 
 ###Store item into database table
-    Config::store($key, $value, $environment = 'main') // key always should be with group (`app.foo`, `app.bar` but not `foobar`)
+    Config::store($key, $value, $environment = 'production') // key should always be with group (`app.foo`, `app.bar` but not `foobar`)
 
 ###Remove item from the database
-	Config::forget($key, $environment = 'main')
+	Config::forget($key, $environment = 'production')
 
 ###Clear all current items (they will be reloaded on next usage)
 	Config::clear()
@@ -54,5 +54,5 @@ Or replace default one
 	Config::clearDb()
 
 ###Return query builder with list of settings from database
-	Config::listDb($wildcard = null, $environment = 'main')
+	Config::listDb($wildcard = null, $environment = 'production')
 
