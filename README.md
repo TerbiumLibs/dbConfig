@@ -12,7 +12,7 @@ And add the ServiceProvider to the providers array in app/config/app.php
 
 Run migration to create settings table
 
-    'php artisan migrate --packadge="terbium/db-config"'
+    'php artisan migrate --package="terbium/db-config"'
 
 Publish config using artisan CLI (if you want to cascade default config).
 
