@@ -1,12 +1,19 @@
 {
     "name": "terbium/db-config",
-    "description": "",
+    "description": "Laravel Config with DB-storage support",
+    "keywords": ["laravel","configuration"],
+    "type": "library",
     "authors": [
         {
             "name": "YAAP",
             "email": "yaapis@gmail.com"
+        },
+        {
+            "name": "Volodimir Kornilov",
+            "email": "mail@terion.name"
         }
     ],
+    "license": "MIT",
     "require": {
         "php": ">=5.3.0",
         "illuminate/support": "4.1.*"
