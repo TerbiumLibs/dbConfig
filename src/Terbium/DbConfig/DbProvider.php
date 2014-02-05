@@ -168,7 +168,9 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
 
         try {
 
-            DB::table($this->table)->where('environment', $environment)->where('key', 'LIKE', $key . '%')->delete();
+            DB::table($this->table)->where('environment', $environment)->where('key', 'LIKE', $key . '.%')->delete();
+
+            DB::table($this->table)->where('environment', $environment)->where('key', 'LIKE', $key)->delete();
 
         } catch (\Exception $e) {
 
