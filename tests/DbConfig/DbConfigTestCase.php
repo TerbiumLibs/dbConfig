@@ -1,5 +1,6 @@
 <?php  namespace DbConfig;
 
+use Illuminate\Support\Facades\Artisan;
 use Mockery as m;
 
 /**
@@ -11,26 +12,17 @@ class DbConfigTestCase extends \PHPUnit_Framework_TestCase {
 
     protected $artisan;
 
-    /**
-     * Creates the application.
-     *
-     * @return \Symfony\Component\HttpKernel\HttpKernelInterface
-     */
-    public function createApplication()
-    {
-        $unitTesting = true;
 
-        $testEnvironment = 'testing';
-
-        return require __DIR__.'/../../../../../bootstrap/start.php';
-    }
 
     public function setUp()
     {
         parent::setUp();
+
+
         if($this->useDatabase)
         {
-	        $this->artisan = $this->createApplication()->make('artisan');
+
+            $this->artisan = \App::make('artisan');
 
 	        $this->setUpDb();
         }
@@ -47,6 +39,8 @@ class DbConfigTestCase extends \PHPUnit_Framework_TestCase {
 
     public function setUpDb()
     {
+
+
         $this->artisan->call( 'migrate', array(
             '--bench'  => 'terbium/db-config',
             '--env' => 'testing',

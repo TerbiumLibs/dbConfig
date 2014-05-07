@@ -16,18 +16,67 @@ class DbConfig extends Repository
      */
     protected $dbProvider;
 
+
+    /**
+     * @var
+     */
+    private $origConfig;
+
+
     /** Create a new configuration repository.
      * @param LoaderInterface $loader
      * @param string $environment
      * @param DbProviderInterface $dbProvider
-     *
+     * @param $origConfig
      */
-    public function __construct(LoaderInterface $loader, $environment, DbProviderInterface $dbProvider)
+    public function __construct(LoaderInterface $loader, $environment, DbProviderInterface $dbProvider, &$origConfig)
     {
 
         parent::__construct($loader, $environment);
 
         $this->dbProvider = $dbProvider;
+
+        $this->origConfig = $origConfig;
+    }
+
+    /**
+     * load packadges list from orig configuration
+     */
+    private function updatePackadgesList(){
+
+        if ($this->origConfig) {
+            $this->packages = $this->origConfig->packages;
+        }
+    }
+
+
+    /**
+     * Get the specified configuration value.
+     *
+     * @param  string  $key
+     * @param  mixed   $default
+     * @return mixed
+     */
+    public function get($key, $default = null) {
+
+        $this->updatePackadgesList();
+
+        return parent::get($key, $default);
+    }
+
+
+    /**
+     * Set a given configuration value.
+     *
+     * @param  string  $key
+     * @param  mixed   $value
+     * @return void
+     */
+    public function set($key, $value)
+    {
+        $this->updatePackadgesList();
+
+        parent::set($key, $value);
     }
 
 
@@ -42,6 +91,8 @@ class DbConfig extends Repository
      */
     protected function load($group, $namespace, $collection)
     {
+
+        $this->updatePackadgesList();
 
         $env = $this->environment;
 
@@ -81,6 +132,7 @@ class DbConfig extends Repository
      */
     public function store($key, $value, $environment = null)
     {
+        $this->updatePackadgesList();
 
         // Default to the current environment.
         if (is_null($environment)) {
@@ -118,6 +170,7 @@ class DbConfig extends Repository
      */
     public function forget($key, $environment = null)
     {
+        $this->updatePackadgesList();
 
         // Default to the current environment.
         if (is_null($environment)) {
@@ -163,7 +216,7 @@ class DbConfig extends Repository
      * @param string $wildcard
      * @param string $environment
      *
-     * @return Illuminate\Database\Query\Builder
+     * @return \Illuminate\Database\Query\Builder
      */
 
     public function listDb($wildcard = null, $environment = null)

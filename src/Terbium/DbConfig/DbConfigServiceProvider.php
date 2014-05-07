@@ -21,7 +21,6 @@ class DbConfigServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-
         $this->package('terbium/db-config');
     }
 
@@ -38,10 +37,12 @@ class DbConfigServiceProvider extends ServiceProvider
 
                 $table = $app['config']['db-config::table'];
 
-                $loader = new FileLoader(new Filesystem, $app->path . '/config');
+                // use original loader
+                $loader = $app['config']->getLoader();
+
                 $dbProvider = new DbProvider($table);
 
-                return new DbConfig($loader, $app->environment(), $dbProvider);
+                return new DbConfig($loader, $app->environment(), $dbProvider, $app['config']);
             }
         );
 

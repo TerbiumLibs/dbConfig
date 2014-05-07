@@ -5,15 +5,12 @@ use Terbium\DbConfig\Facades\DbConfig;
 class DbConfigTest extends DbConfigTestCase
 {
 
-    protected $app;
-
     public function setUp()
     {
 
         parent::setUp();
-        DbConfig::clearDb();
 
-        $this->app = $this->createApplication();
+        DbConfig::clearDb();
 
     }
 
@@ -154,8 +151,8 @@ class DbConfigTest extends DbConfigTestCase
     function _prepareFallback($value)
     {
 
-        $this->app['config']->set('foo.bar', $value);
-        $fb = $this->app['config']->get('foo.bar');
+        \Config::set('foo.bar', $value);
+        $fb = \Config::get('foo.bar');
 
         DbConfig::store('foo.bar', $value);
         DbConfig::clear();
@@ -165,10 +162,40 @@ class DbConfigTest extends DbConfigTestCase
     }
 
 
+    public function testPackageFallback()
+    {
+
+        $fb = \Config::get('db-config::table');
+        $db = DbConfig::get('db-config::table');
+
+        $this->assertEquals($fb, $db);
+
+
+
+        /* @todo - respect original Config::et
+        \Config::set('db-config::feature','foo');
+        $db = DbConfig::get('db-config::feature');
+
+        $this->assertEquals('foo', $db);
+        */
+
+        $fb = \Config::get('db-config::not_existing');
+        $db = DbConfig::get('db-config::not_existing');
+
+        $this->assertEquals($fb, $db);
+
+        $fb = \Config::get('db-config::not_existing', 'with_default');
+        $db = DbConfig::get('db-config::not_existing', 'with_default');
+
+        $this->assertEquals($fb, $db);
+
+    }
+
+
     public function testEnvironment()
     {
-        DbConfig::store('testCase.foo', 'bar');
-        DbConfig::store('testCase.foo', 'baz', 'testing');
+        DbConfig::store('testCase.foo', 'bar', 'production');
+        DbConfig::store('testCase.foo', 'baz', 'local');
 
         DbConfig::clear();
 
@@ -176,16 +203,14 @@ class DbConfigTest extends DbConfigTestCase
         $this->assertEquals('baz', DbConfig::get('testCase.foo'));
 
 
-        DbConfig::store('1.2.3.4.5.6', 'bar');
-        DbConfig::store('1.2.3.4', 'baz', 'testing');
+        DbConfig::store('1.2.3.4.5.6', 'bar', 'production');
+        DbConfig::store('1.2.3.4', 'baz', 'local');
 
         DbConfig::clear();
 
         // now we are in testing environment
         $this->assertEquals('baz', DbConfig::get('1.2.3.4'));
         $this->assertFalse(DbConfig::has('1.2.3.4.5'));
-
-
 
     }
 
