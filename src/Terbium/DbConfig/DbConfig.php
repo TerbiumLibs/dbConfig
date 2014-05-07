@@ -79,8 +79,13 @@ class DbConfig extends Repository
      *
      * @throws Exceptions\SaveException
      */
-    public function store($key, $value, $environment = 'production')
+    public function store($key, $value, $environment = null)
     {
+
+        // Default to the current environment.
+        if (is_null($environment)) {
+            $environment = $this->environment;
+        }
 
         list($namespace, $group, $item) = $this->parseKey($key);
 
@@ -111,8 +116,13 @@ class DbConfig extends Repository
      *
      * @throws Exceptions\SaveException
      */
-    public function forget($key, $environment = 'production')
+    public function forget($key, $environment = null)
     {
+
+        // Default to the current environment.
+        if (is_null($environment)) {
+            $environment = $this->environment;
+        }
 
         list($namespace, $group, $item) = $this->parseKey($key);
 
@@ -156,12 +166,16 @@ class DbConfig extends Repository
      * @return Illuminate\Database\Query\Builder
      */
 
-    public function listDb($wildcard = null, $environment = 'production')
+    public function listDb($wildcard = null, $environment = null)
     {
+ 
+        // Default to the current environment.
+        if (is_null($environment)) {
+            $environment = $this->environment;
+        }
 
         return $this->dbProvider->listDb($wildcard, $environment);
     }
 
 
 }
- 
