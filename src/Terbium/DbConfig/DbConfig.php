@@ -1,12 +1,10 @@
 <?php namespace Terbium\DbConfig;
 
-use Illuminate\Config\Repository;
-use Illuminate\Config\LoaderInterface;
 use Terbium\DbConfig\Interfaces\DbProviderInterface;
 use Terbium\DbConfig\Exceptions\SaveException;
 
 
-class DbConfig extends Repository
+class DbConfig
 {
 
     /**
@@ -16,6 +14,21 @@ class DbConfig extends Repository
      */
     protected $dbProvider;
 
+    /**
+     * The current environment.
+     *
+     * @var string
+     */
+    protected $environment;
+
+
+    /**
+     * All of the configuration items from DB.
+     *
+     * @var array
+     */
+    protected $items = array();
+
 
     /**
      * @var
@@ -23,60 +36,89 @@ class DbConfig extends Repository
     private $origConfig;
 
 
-    /** Create a new configuration repository.
-     * @param LoaderInterface $loader
-     * @param string $environment
-     * @param DbProviderInterface $dbProvider
-     * @param $origConfig
+    /**
+     * The after load callbacks for namespaces.
+     *
+     * @var array
      */
-    public function __construct(LoaderInterface $loader, $environment, DbProviderInterface $dbProvider, &$origConfig)
-    {
+    protected $afterLoad = array();
 
-        parent::__construct($loader, $environment);
+
+    /**
+     * @param $origConfig
+     * @param $environment
+     * @param DbProviderInterface $dbProvider
+     */
+    public function __construct(&$origConfig, $environment, DbProviderInterface $dbProvider)
+    {
 
         $this->dbProvider = $dbProvider;
 
         $this->origConfig = $origConfig;
+
+        $this->environment = $environment;
     }
 
-    /**
-     * load packadges list from orig configuration
-     */
-    private function updatePackadgesList(){
 
-        if ($this->origConfig) {
-            $this->packages = $this->origConfig->packages;
-        }
+    /**
+     * Determine if the given configuration value exists.
+     *
+     * @param  string $key
+     * @return bool
+     */
+    public function has($key, $fallback = true)
+    {
+
+        $default = microtime(true);
+
+        return $this->get($key, $default, $fallback) !== $default;
     }
 
 
     /**
      * Get the specified configuration value.
      *
-     * @param  string  $key
-     * @param  mixed   $default
+     * @param  string $key
+     * @param  mixed $default
+     * @param bool $fallback
      * @return mixed
      */
-    public function get($key, $default = null) {
+    public function get($key, $default = null, $fallback = true)
+    {
 
-        $this->updatePackadgesList();
+        list($namespace, $group, $item) = $this->origConfig->parseKey($key);
 
-        return parent::get($key, $default);
+        $collection = $this->getCollection($group, $namespace);
+
+        $this->load($group, $namespace, $collection);
+
+        $result =  array_get($this->items[$collection], $item, $default);
+
+
+        // found one in DB
+        if ($result !== $default) return $result;
+
+        // not set in DB and needn't to fallback
+        if (!$fallback) {
+            return $default;
+        }
+
+        return $this->origConfig->get($key, $default);
     }
 
-
     /**
-     * Set a given configuration value.
+     * Get the collection identifier.
      *
-     * @param  string  $key
-     * @param  mixed   $value
-     * @return void
+     * @param  string $group
+     * @param  string $namespace
+     * @return string
      */
-    public function set($key, $value)
+    protected function getCollection($group, $namespace = null)
     {
-        $this->updatePackadgesList();
 
-        parent::set($key, $value);
+        $namespace = $namespace ? : '*';
+
+        return $namespace . '::' . $group;
     }
 
 
@@ -92,8 +134,6 @@ class DbConfig extends Repository
     protected function load($group, $namespace, $collection)
     {
 
-        $this->updatePackadgesList();
-
         $env = $this->environment;
 
         // If we've already loaded this collection, we will just bail out since we do
@@ -103,19 +143,38 @@ class DbConfig extends Repository
             return;
         }
 
-        $items = $this->loader->load($env, $group, $namespace);
-
         //load items from DB
-        $items = array_replace_recursive($items, $this->dbProvider->load($collection, $env));
+        $items = $this->dbProvider->load($collection, $env);
 
         // If we've already loaded this collection, we will just bail out since we do
         // not want to load it again. Once items are loaded a first time they will
         // stay kept in memory within this class and not loaded from disk again.
+
+
+        $this->afterLoad = $this->origConfig->getAfterLoadCallbacks();
+
+
         if (isset($this->afterLoad[$namespace])) {
             $items = $this->callAfterLoad($namespace, $group, $items);
         }
 
         $this->items[$collection] = $items;
+    }
+
+    /**
+     * Call the after load callback for a namespace.
+     *
+     * @param  string $namespace
+     * @param  string $group
+     * @param  array $items
+     * @return array
+     */
+    protected function callAfterLoad($namespace, $group, $items)
+    {
+
+        $callback = $this->afterLoad[$namespace];
+
+        return call_user_func($callback, $this->origConfig, $group, $items);
     }
 
 
@@ -132,14 +191,13 @@ class DbConfig extends Repository
      */
     public function store($key, $value, $environment = null)
     {
-        $this->updatePackadgesList();
 
         // Default to the current environment.
         if (is_null($environment)) {
             $environment = $this->environment;
         }
 
-        list($namespace, $group, $item) = $this->parseKey($key);
+        list($namespace, $group, $item) = $this->origConfig->parseKey($key);
 
         if (is_null($item)) {
             throw new SaveException('The key should contain a group');
@@ -152,8 +210,8 @@ class DbConfig extends Repository
         // save key => value into DB
         $this->dbProvider->store($dbkey, $value, $environment);
 
-        //set value to current config
-        $this->set($key, $value);
+        //set value to config
+        $this->origConfig->set($key, $value);
 
 
     }
@@ -170,17 +228,17 @@ class DbConfig extends Repository
      */
     public function forget($key, $environment = null)
     {
-        $this->updatePackadgesList();
 
         // Default to the current environment.
         if (is_null($environment)) {
             $environment = $this->environment;
         }
 
-        list($namespace, $group, $item) = $this->parseKey($key);
+        list($namespace, $group, $item) = $this->origConfig->parseKey($key);
 
-        if (is_null($item))
+        if (is_null($item)) {
             throw new SaveException('The key should contain a group');
+        }
 
         $collection = $this->getCollection($group, $namespace);
 
@@ -188,6 +246,9 @@ class DbConfig extends Repository
 
         // remove item from DB
         $this->dbProvider->forget($dbkey, $environment);
+
+        // remove item from original config
+        $this->origConfig->offsetUnset($key);
 
     }
 
@@ -221,13 +282,29 @@ class DbConfig extends Repository
 
     public function listDb($wildcard = null, $environment = null)
     {
- 
+
         // Default to the current environment.
         if (is_null($environment)) {
             $environment = $this->environment;
         }
 
         return $this->dbProvider->listDb($wildcard, $environment);
+    }
+
+
+    /**
+     *
+     * Call original Config::{method}
+     *
+     * @param $name
+     * @param $arguments
+     * @return mixed
+     */
+    public function __call($name, $arguments)
+    {
+
+        return call_user_func_array(array($this->origConfig, $name), $arguments);
+
     }
 
 

@@ -51,14 +51,14 @@ class DbConfigTest extends DbConfigTestCase
         DbConfig::store('a.b.c.d.e', 'f');
         DbConfig::forget('a.b.c');
         DbConfig::clear();
-        $this->assertFalse(DbConfig::has('a.b.c'));
+        $this->assertFalse(DbConfig::has('a.b.c', false));
 
         DbConfig::store('1.2.3.4.5.6', 'f');
         DbConfig::store('1.2.3.4.7.8', 'b');
         DbConfig::forget('1.2.3.4.5');
         DbConfig::clear();
-        $this->assertFalse(DbConfig::has('1.2.3.4.5.6'));
-        $this->assertTrue(DbConfig::has('1.2.3.4'));
+        $this->assertFalse(DbConfig::has('1.2.3.4.5.6', false));
+        $this->assertTrue(DbConfig::has('1.2.3.4', false));
 
         DbConfig::store('1.2.3.4.5.6.', 'f');
 
@@ -66,8 +66,8 @@ class DbConfigTest extends DbConfigTestCase
         DbConfig::forget('1.2.3.4.7.8.');
         DbConfig::clear();
 
-        $this->assertFalse(DbConfig::has('1.2.3.4.5.6.'));
-        $this->assertTrue(DbConfig::has('1.2.3.4'));
+        $this->assertFalse(DbConfig::has('1.2.3.4.5.6.', false));
+        $this->assertTrue(DbConfig::has('1.2.3.4', false));
     }
 
     public function testUnicode()

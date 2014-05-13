@@ -37,12 +37,9 @@ class DbConfigServiceProvider extends ServiceProvider
 
                 $table = $app['config']['db-config::table'];
 
-                // use original loader
-                $loader = $app['config']->getLoader();
-
                 $dbProvider = new DbProvider($table);
 
-                return new DbConfig($loader, $app->environment(), $dbProvider, $app['config']);
+                return new DbConfig($app['config'], $app->environment(), $dbProvider);
             }
         );
 
