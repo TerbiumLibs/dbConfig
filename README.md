@@ -7,7 +7,7 @@ This package extends default laravel Config, so fallback capability is built in
 Require this package in your composer.json:
 
 ~~~json
-"terbium/db-config": "dev-master"
+"terbium/db-config": "1.*"
 ~~~
 
 And add the ServiceProvider to the providers array in app/config/app.php
