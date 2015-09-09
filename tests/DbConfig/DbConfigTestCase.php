@@ -1,16 +1,34 @@
 <?php  namespace DbConfig;
 
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Filesystem\ClassFinder;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Testing\TestCase;
 use Mockery as m;
 
 /**
  * Class DbConfigTestCase
  */
-class DbConfigTestCase extends \PHPUnit_Framework_TestCase {
-
-    protected $useDatabase = true;
+class DbConfigTestCase extends TestCase {
 
     protected $artisan;
+
+
+    /**
+     * Boots the application.
+     *
+     * @return \Illuminate\Foundation\Application
+     */
+    public function createApplication()
+    {
+
+        $app = require __DIR__.'/../../vendor/laravel/laravel/bootstrap/app.php';
+
+        $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
+
+        $app->register('Terbium\DbConfig\DbConfigServiceProvider');
+
+        return $app;
+    }
 
 
 
@@ -18,38 +36,45 @@ class DbConfigTestCase extends \PHPUnit_Framework_TestCase {
     {
         parent::setUp();
 
+        $this->app['config']->set('database.default','sqlite');
+        $this->app['config']->set('database.connections.sqlite.database', ':memory:');
 
-        if($this->useDatabase)
-        {
+        $this->migrate();
 
-            $this->artisan = \App::make('artisan');
 
-	        $this->setUpDb();
-        }
+
     }
 
     public function teardown()
     {
         m::close();
-	    if($this->useDatabase)
+
+    }
+
+
+    /**
+     * run package database migrations
+     *
+     * @return void
+     */
+    public function migrate()
+    {
+        $fileSystem = new Filesystem;
+        $classFinder = new ClassFinder;
+
+        foreach($fileSystem->files(__DIR__ . '/../../src/migrations') as $file)
         {
-            $this->teardownDb();
+            $fileSystem->requireOnce($file);
+            $migrationClass = $classFinder->findClass($file);
+
+            (new $migrationClass)->up();
         }
     }
 
-    public function setUpDb()
-    {
+    public function test_it_default(){
 
-
-        $this->artisan->call( 'migrate', array(
-            '--bench'  => 'terbium/db-config',
-            '--env' => 'testing',
-	        ));
+        
     }
 
-    public function teardownDb()
-    {
-//	    $this->artisan->call( 'migrate:reset');
-    }
 
 }

@@ -5,28 +5,25 @@ interface DbProviderInterface {
 	/**
 	 * Load the given configuration collection.
 	 *
-	 * @param  string  $environment
 	 * @param  string  $collection
 	 * @return array
 	 */
-	public function load($environment, $collection);
+	public function load($collection = null);
 
 	/**
 	 * Save item to the database or update the existing one
 	 *
 	 * @param string $key
 	 * @param mixed $value
-	 * @param string $environment
 	 */
-	public function store($key, $value, $environment = 'production');
+	public function store($key, $value);
 
 	/**
 	 * Remove item from the database
 	 *
 	 * @param string $key
-	 * @param string $environment
 	 */
-	public function forget($key, $environment = 'production');
+	public function forget($key);
 
 	/**
 	 * Clear the table with settings

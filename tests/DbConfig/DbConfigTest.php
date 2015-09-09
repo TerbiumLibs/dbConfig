@@ -1,6 +1,6 @@
 <?php namespace DbConfig;
 
-use Terbium\DbConfig\Facades\DbConfig;
+use Terbium\DbConfig\Facade as DbConfig;
 
 class DbConfigTest extends DbConfigTestCase
 {
@@ -45,7 +45,7 @@ class DbConfigTest extends DbConfigTestCase
     }
 
 
-    public function testForget()
+    public function _testForget()
     {
 
         DbConfig::store('a.b.c.d.e', 'f');
@@ -70,7 +70,7 @@ class DbConfigTest extends DbConfigTestCase
         $this->assertTrue(DbConfig::has('1.2.3.4', false));
     }
 
-    public function testUnicode()
+    public function _testUnicode()
     {
 
         DbConfig::store('a.1', 'Hälfte');
@@ -86,7 +86,7 @@ class DbConfigTest extends DbConfigTestCase
         $this->assertEquals('saß', DbConfig::get('d.1'));
     }
 
-    public function testSetArray()
+    public function _testSetArray()
     {
 
         $array = array(
@@ -102,7 +102,7 @@ class DbConfigTest extends DbConfigTestCase
         $this->assertEquals($array, DbConfig::get('1.2'));
     }
 
-    public function testFallback()
+    public function _testFallback()
     {
 
         // null
@@ -148,21 +148,8 @@ class DbConfigTest extends DbConfigTestCase
     }
 
 
-    function _prepareFallback($value)
-    {
 
-        \Config::set('foo.bar', $value);
-        $fb = \Config::get('foo.bar');
-
-        DbConfig::store('foo.bar', $value);
-        DbConfig::clear();
-        $db = DbConfig::get('foo.bar');
-
-        $this->assertEquals($fb, $db);
-    }
-
-
-    public function testPackageFallback()
+    public function _testPackageFallback()
     {
 
         $fb = \Config::get('db-config::table');
@@ -192,7 +179,7 @@ class DbConfigTest extends DbConfigTestCase
     }
 
 
-    public function testEnvironment()
+    public function _testEnvironment()
     {
         DbConfig::store('testCase.foo', 'bar', 'production');
         DbConfig::store('testCase.foo', 'baz', 'local');
@@ -213,5 +200,20 @@ class DbConfigTest extends DbConfigTestCase
         $this->assertFalse(DbConfig::has('1.2.3.4.5'));
 
     }
+
+    function _prepareFallback($value)
+    {
+
+        \Config::set('foo.bar', $value);
+        $fb = \Config::get('foo.bar');
+
+        DbConfig::store('foo.bar', $value);
+        DbConfig::clear();
+        $db = DbConfig::get('foo.bar');
+
+        $this->assertEquals($fb, $db);
+    }
+
+
 
 }

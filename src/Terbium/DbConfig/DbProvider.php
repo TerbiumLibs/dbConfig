@@ -26,31 +26,19 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
     /**
      * Load the given configuration collection.
      *
-     * @param  string $environment
      * @param  string $collection
      *
      * @return array
      */
-    public function load($collection, $environment = 'production')
+    public function load($collection = null)
     {
 
         $items = array();
 
+        $list = DB::table($this->table);
 
-        // First we'll get the main configuration with empty environment. Once we have
-        // that we can check for any environment specific settings, which will get
-        // merged on top of the main arrays to make the environments cascade.
-        $list = DB::table($this->table)->where('key', 'LIKE', $collection . '%');
-
-        if ($environment != 'production') {
-
-            //detect sorting order to get production environment first
-            $sort = (strcasecmp('production', $environment) > 0) ? 'DESC': 'ASC';
-
-            $list = $list->whereIn('environment',array('production', $environment))->orderBy('environment', $sort);
-
-        } else {
-            $list = $list->where('environment', 'production');
+        if ($collection !== null) {
+            $list = $list->where('key', 'LIKE', $collection . '%');
         }
 
         $list = $list->lists('value', 'key');
@@ -58,8 +46,6 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
 
         // convert dotted list back to multidimensional array
         foreach ($list as $key => $value) {
-            // remove namespace and group from key
-            list(, , $key) = $this->parseKey($key);
             $value = json_decode($value);
             array_set($items, $key, $value);
         }
@@ -72,13 +58,12 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      *
      * @param string $key
      * @param mixed $value
-     * @param string $environment
      *
      * @return void
      *
      * @throws Exceptions\SaveException
      */
-    public function store($key, $value, $environment = 'production')
+    public function store($key, $value)
     {
 
         if (!is_array($value)) {
@@ -93,7 +78,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
         }
 
         foreach ($value as $k => $v) {
-            $this->_store($k, $v, $environment);
+            $this->_store($k, $v);
         }
 
     }
@@ -102,53 +87,50 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
     /**
      * @param string $key
      * @param string $value
-     * @param string $environment
      * @throws Exceptions\SaveException
      */
-    private function _store($key, $value, $environment = 'production')
+    private function _store($key, $value)
     {
 
         $provider = $this;
         $table = $this->table;
 
         DB::transaction(
-            function () use (&$provider, $table, $key, $value, $environment) {
+                function () use (&$provider, $table, $key, $value) {
 
-                // remove old keys
-                // set 1.2.3.4
-                // set 1.2.3.4.5
-                // set 1 - will keep previous 2 records in database, and that's bad =)
-                $provider->forget($key, $environment);
-
-
-                // Try to insert a pair of key => value to DB.
-                // In case of exception - update them.
-                // This code should be replaced with insert_with_update method after its being implemented
-                // See http://laravel.uservoice.com/forums/175973-laravel-4/suggestions/3535821-provide-support-for-bulk-insert-with-update-such-
+                    // remove old keys
+                    // set 1.2.3.4
+                    // set 1.2.3.4.5
+                    // set 1 - will keep previous 2 records in database, and that's bad =)
+                    $provider->forget($key);
 
 
-                $value = json_encode($value);
+                    // Try to insert a pair of key => value to DB.
+                    // In case of exception - update them.
+                    // This code should be replaced with insert_with_update method after its being implemented
+                    // See http://laravel.uservoice.com/forums/175973-laravel-4/suggestions/3535821-provide-support-for-bulk-insert-with-update-such-
 
-                try {
 
-                    DB::table($table)->insert(array('environment' => $environment, 'key' => $key, 'value' => $value));
-
-                } catch (\Exception $e) {
+                    $value = json_encode($value);
 
                     try {
 
-                        DB::table($table)->where('environment', $environment)->where('key', $key)->update(
-                            array('value' => $value)
-                        );
+                        DB::table($table)->insert(array('key' => $key, 'value' => $value));
 
                     } catch (\Exception $e) {
 
-                        throw new SaveException("Cannot save to database: " . $e->getMessage());
+                        try {
+
+                            DB::table($table)->where('key', $key)->update(array('value' => $value));
+
+                        } catch (\Exception $e) {
+
+                            throw new SaveException("Cannot save to database: " . $e->getMessage());
+
+                        }
 
                     }
-
                 }
-            }
         );
     }
 
@@ -157,20 +139,19 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      * Remove item from the database
      *
      * @param string $key
-     * @param string $environment
      *
      * @return void
      *
      * @throws Exceptions\SaveException
      */
-    public function forget($key, $environment = 'production')
+    public function forget($key)
     {
 
         try {
 
-            DB::table($this->table)->where('environment', $environment)->where('key', 'LIKE', $key . '.%')->delete();
+            DB::table($this->table)->where('key', 'LIKE', $key . '.%')->delete();
 
-            DB::table($this->table)->where('environment', $environment)->where('key', 'LIKE', $key)->delete();
+            DB::table($this->table)->where('key', 'LIKE', $key)->delete();
 
         } catch (\Exception $e) {
 
@@ -206,19 +187,15 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
      * Return query builder with list of settings from database
      *
      * @param string $wildcard
-     * @param string $environment
      *
      * @return Illuminate\Database\Query\Builder
      */
-    public function listDb($wildcard = null, $environment = 'production')
+    public function listDb($wildcard = null)
     {
 
         $query = DB::table($this->table);
         if (!empty($wildcard)) {
             $query = $query->where('key', 'LIKE', $wildcard . '%');
-        }
-        if (!empty($environment)) {
-            $query = $query->where('environment', $environment);
         }
 
         return $query;

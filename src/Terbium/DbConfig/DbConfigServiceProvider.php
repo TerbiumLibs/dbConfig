@@ -21,7 +21,13 @@ class DbConfigServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->package('terbium/db-config');
+        $this->publishes([
+            __DIR__.'/../../../config/config.php' => config_path('db-config.php'),
+        ], 'config');
+
+        $this->publishes([
+            __DIR__.'/../../migrations/' => database_path('migrations')
+        ], 'migrations');
     }
 
     /**
@@ -32,24 +38,20 @@ class DbConfigServiceProvider extends ServiceProvider
     public function register()
     {
 
-        $this->app['db-config'] = $this->app->share(
-            function ($app) {
+        // merge & publihs config
+        $configPath = __DIR__ . '/../../../config/config.php';
+        $this->mergeConfigFrom($configPath, 'db-config');
+        $this->publishes([$configPath => config_path('db-config.php')]);
 
-                $table = $app['config']['db-config::table'];
+        $this->app['db-config'] = $this->app->share(function($app) {
 
-                $dbProvider = new DbProvider($table);
+            $table = $app['config']->get('db-config.table');
 
-                return new DbConfig($app['config'], $app->environment(), $dbProvider);
-            }
-        );
+            $dbProvider = new DbProvider($table);
 
-        $this->app->booting(
-            function () {
+            return new DbConfig($app['config'], $dbProvider);
+        });
 
-                $loader = \Illuminate\Foundation\AliasLoader::getInstance();
-                $loader->alias('DbConfig', 'Terbium\DbConfig\Facades\DbConfig');
-            }
-        );
     }
 
     /**
@@ -60,7 +62,7 @@ class DbConfigServiceProvider extends ServiceProvider
     public function provides()
     {
 
-        return array('db-config');
+        return array();
     }
 
 }

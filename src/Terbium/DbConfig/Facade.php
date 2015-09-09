@@ -1,8 +1,7 @@
-<?php namespace Terbium\DbConfig\Facades;
+<?php namespace Terbium\DbConfig;
 
-use Illuminate\Support\Facades\Facade;
 
-class DbConfig extends Facade {
+class Facade extends \Illuminate\Support\Facades\Facade {
 
     /**
 * Get the registered name of the component.
