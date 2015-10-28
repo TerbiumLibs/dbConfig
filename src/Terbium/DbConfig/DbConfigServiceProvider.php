@@ -28,7 +28,7 @@ class DbConfigServiceProvider extends ServiceProvider
         $timestamp = date('Y_m_d_His', time());
 
         $this->publishes([
-            __DIR__.'/../../../resources/migrations/create_settings_table.php.temp' => database_path('migrations'.$timestamp.'create_settings_table.php')
+            __DIR__.'/../../../resources/migrations/create_settings_table.php.temp' => database_path('migrations/'.$timestamp.'_create_settings_table.php')
         ], 'migrations');
     }
 
