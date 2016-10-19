@@ -41,7 +41,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
             $list = $list->where('key', 'LIKE', $collection . '%');
         }
 
-        $list = $list->lists('value', 'key');
+        $list = $list->pluck('value', 'key');
 
 
         // convert dotted list back to multidimensional array

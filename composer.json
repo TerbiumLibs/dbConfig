@@ -16,12 +16,12 @@
     "license": "MIT",
     "require": {
         "php": ">=5.4.0",
-        "illuminate/support": "5.1.*"
+        "illuminate/support": ">=5.1"
     },
     "require-dev": {
         "mockery/mockery": "dev-master",
         "phpunit/phpunit": "~4.0",
-        "laravel/laravel": "5.1.*"
+        "laravel/laravel": ">=5.1"
     },
     "autoload": {
         "classmap": [
