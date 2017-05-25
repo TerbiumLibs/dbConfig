@@ -45,7 +45,7 @@ class DbConfigServiceProvider extends ServiceProvider
         $this->mergeConfigFrom($configPath, 'db-config');
         $this->publishes([$configPath => config_path('db-config.php')]);
 
-        $this->app['db-config'] = $this->app->share(function($app) {
+        $this->app->singleton('db-config', function($app) {
 
             $table = $app['config']->get('db-config.table');
 
