@@ -1,5 +1,5 @@
 {
-    "name": "ChrisdAutume/db-config",
+    "name": "chrisd-autume/db-config",
     "description": "Laravel Config with DB-storage support",
     "keywords": ["laravel","configuration"],
     "type": "library",
