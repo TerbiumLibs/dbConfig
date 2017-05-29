@@ -1,3 +1,5 @@
+Forked from [TerbiumLibs/dbConfig](https://github.com/TerbiumLibs/dbConfig/)!
+
 # Laravel 5 Config with DB-storage support
 This package extends default laravel Config, so fallback capability is built in
 

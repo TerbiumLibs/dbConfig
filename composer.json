@@ -1,9 +1,13 @@
 {
-    "name": "terbium/db-config",
+    "name": "ChrisdAutume/db-config",
     "description": "Laravel Config with DB-storage support",
     "keywords": ["laravel","configuration"],
     "type": "library",
     "authors": [
+        {
+            "name": "Chris",
+            "email": "christian@dautume.fr"
+        },
         {
             "name": "YAAP",
             "email": "yaapis@gmail.com"
