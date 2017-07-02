@@ -46,7 +46,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
 
         // convert dotted list back to multidimensional array
         foreach ($list as $key => $value) {
-            $value = json_decode($value);
+            //$value = json_decode($value);
             array_set($items, $key, $value);
         }
 
