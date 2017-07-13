@@ -111,7 +111,7 @@ class DbProvider extends NamespacedItemResolver implements Interfaces\DbProvider
                     // See http://laravel.uservoice.com/forums/175973-laravel-4/suggestions/3535821-provide-support-for-bulk-insert-with-update-such-
 
 
-                    $value = json_encode($value);
+                    //$value = json_encode($value);
 
                     try {
 
